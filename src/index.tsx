@@ -3,13 +3,41 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { CssBaseline, ThemeOptions, ThemeProvider, createTheme } from '@mui/material';
+import { BrowserRouter } from 'react-router-dom';
+import SiteHeader from './components/SiteHeader';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+const themeOptions: ThemeOptions = {
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#3f51b5',
+    },
+    secondary: {
+      main: '#f5b300',
+    },
+    background: {
+      default: '#141233',
+      paper: '#141233',
+    },
+  },
+};
+
+const theme = createTheme(themeOptions);
+
 root.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <SiteHeader sx={{ height: '200px' }} />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ThemeProvider>
   </React.StrictMode>
 );
 
