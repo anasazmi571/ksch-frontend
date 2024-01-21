@@ -7,6 +7,7 @@ import { CssBaseline, ThemeOptions, ThemeProvider, createTheme } from '@mui/mate
 import { BrowserRouter } from 'react-router-dom';
 import SiteHeader from './components/SiteHeader';
 import { UserProvider } from './contexts/UserContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -35,10 +36,12 @@ root.render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <UserProvider>
-        <SiteHeader sx={{ height: '200px' }} />
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <SettingsProvider>
+          <BrowserRouter>
+            <SiteHeader sx={{ height: '200px' }} />
+            <App />
+          </BrowserRouter>
+        </SettingsProvider>
       </UserProvider>
     </ThemeProvider>
   </React.StrictMode>

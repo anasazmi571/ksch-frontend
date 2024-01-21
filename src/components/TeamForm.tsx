@@ -4,82 +4,40 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField, { TextFieldProps } from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useMemo, useState } from "react";
-import { Category, Contingent, Events, TeamManager, TeamMember } from "../models";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { Category, TeamFormDetails, TeamMember } from "../models";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import Switch from "@mui/material/Switch";
 import Autocomplete from "@mui/material/Autocomplete";
 import Divider from "@mui/material/Divider";
 import Fieldset from "./Fieldset";
+import { UserContext } from "../contexts/UserContext";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
 
-export default function TeamForm() {
+export default function TeamForm(
+  {
+    contingent,
+    teamId,
+    defaultValue,
+    disabled,
+    onSave,
+    onDelete
+  }: {
+    contingent: string,
+    teamId: string,
+    defaultValue?: TeamFormDetails,
+    disabled?: boolean,
+    onSave: (details: TeamFormDetails) => void,
+    onDelete?: () => void
+  }
+) {
+  const userContext = useContext(UserContext);
   const icPattern = useMemo(() => /^\d\d\d\d\d\d-\d\d-\d\d\d\d$/i, []);
-  const allCategories: Category[] = useMemo(() => [
-    {
-      id: 'branch-male',
-      name: 'Cawangan Lelaki'
-    },
-    {
-      id: 'branch-female',
-      name: 'Cawangan Wanita'
-    },
-    {
-      id: 'uas-male',
-      name: 'Universiti Awam/Swasta Lelaki'
-    },
-    {
-      id: 'uas-female',
-      name: 'Universiti Awam/Swasta Wanita'
-    },
-    {
-      id: 'hs-male',
-      name: 'Sekolah Menengah Tinggi Lelaki'
-    },
-    {
-      id: 'hs-female',
-      name: 'Sekolah Menengah Tinggi Wanita'
-    },
-    {
-      id: 'ms-male',
-      name: 'Sekolah Menengah Rendah Lelaki'
-    },
-    {
-      id: 'ms-female',
-      name: 'Sekolah Menengah Rendah Wanita'
-    }
-  ], []);
-  const contingents: Contingent[] = useMemo(() => [
-    {
-      id: 'cawselangor',
-      name: 'Cawangan Selangor',
-      branch: true,
-      uas: false,
-      hs: false,
-      ms: false
-    },
-    {
-      id: 'uasutp',
-      name: 'Universiti Teknologi Petronas',
-      branch: false,
-      uas: true,
-      hs: false,
-      ms: false
-    },
-    {
-      id: 'scmckk',
-      name: 'Kolej Melayu Kuala Kangsar',
-      branch: false,
-      uas: false,
-      hs: true,
-      ms: false
-    }
-  ], []);
 
-  const [contingent, setContingent] = useState<string>();
-  const [category, setCategory] = useState<string>();
   const [memberNo, setMemberNo] = useState<number>(1);
-  const [members, setMembers] = useState<TeamMember[]>([]);
   const [joiningMainEvent, setJoiningMainEvent] = useState<boolean>(false);
   const [joiningOpenEvent, setJoiningOpenEvent] = useState<boolean>(false);
   const [event1, setEvent1] = useState<boolean>(false);
@@ -93,16 +51,33 @@ export default function TeamForm() {
   const [event9, setEvent9] = useState<boolean>(false);
   const [event10, setEvent10] = useState<boolean>(false);
   const [event11, setEvent11] = useState<boolean>(false);
-  const [availableCategories, setAvailableCategories] = useState<Category[]>(allCategories);
-  const [events, setEvents] = useState<Events>({});
+  const [availableCategories, setAvailableCategories] = useState<Category[]>(userContext.categories);
+  const [team, setTeam] = useState<TeamFormDetails>({
+    category: undefined,
+    members: [],
+    events: {
+      team: teamId
+    }
+  });
+  const [defaultIsSet, setDefaultIsSet] = useState<boolean>(false);
 
   useEffect(() => {
-    const selectedContingent = contingents.find(x => x.id === contingent);
+    if (!defaultIsSet && !!defaultValue) {
+      setTeam(defaultValue);
+      for (const p of Object.keys(defaultValue.events).filter(x => x !== 'team')) {
+        //
+      }
+      setDefaultIsSet(true);
+    }
+  }, [defaultValue, defaultIsSet]);
+
+  useEffect(() => {
+    const selectedContingent = userContext.contingents.find(x => x.id === contingent);
     if (!selectedContingent) {
-      setAvailableCategories(allCategories);
+      setAvailableCategories(userContext.categories);
     } else {
       setAvailableCategories(
-        allCategories.filter(
+        userContext.categories.filter(
           c => (selectedContingent.branch && c.id.includes('branch'))
             || (selectedContingent.uas && c.id.includes('uas'))
             || (selectedContingent.hs && c.id.includes('hs'))
@@ -110,76 +85,104 @@ export default function TeamForm() {
         )
       );
     }
-  }, [contingent, allCategories, contingents]);
+  }, [contingent, userContext]);
 
   useEffect(() => {
-    setMembers(
-      m => {
+    setTeam(
+      t => {
+        let m = t.members;
         if (m.length < memberNo) {
-          return [...m, ...Array<TeamMember>(memberNo - m.length).fill({ id: '', name: '', nric: '' })];
+          m = [...m, ...Array<TeamMember>(memberNo - m.length).fill({ id: '', name: '', nric: '', team: teamId })];
         } else if (m.length > memberNo) {
-          return m.slice(0, memberNo);
-        } else {
-          return m;
+          m = m.slice(0, memberNo);
         }
+        return {
+          ...t,
+          members: m
+        };
       }
     );
-  }, [memberNo]);
+  }, [memberNo, teamId]);
 
   const handleMemberNameChange = (index: number, value: string) => {
-    if (index < 0 || index >= members.length) {
+    if (index < 0 || index >= team.members.length) {
       return;
     }
-    setMembers(
-      m => [
-        ...m.slice(0, index),
-        {
-          ...m[index],
-          name: value
-        },
-        ...m.slice(index + 1)
-      ]
+    setTeam(
+      t => ({
+        ...t,
+        members: [
+          ...team.members.slice(0, index),
+          {
+            ...team.members[index],
+            name: value
+          },
+          ...team.members.slice(index + 1)
+        ]
+      })
     );
   };
 
   const handleMemberIcChange = (index: number, value: string) => {
-    if (index < 0 || index >= members.length) {
+    if (index < 0 || index >= team.members.length) {
       return;
     }
-    setMembers(
-      m => [
-        ...m.slice(0, index),
-        {
-          ...m[index],
-          nric: value
-        },
-        ...m.slice(index + 1)
-      ]
+    setTeam(
+      t => ({
+        ...t,
+        members: [
+          ...t.members.slice(0, index),
+          {
+            ...t.members[index],
+            nric: value
+          },
+          ...t.members.slice(index + 1)
+        ]
+      })
+    );
+  };
+
+  const handleEventMemberChange = (eventIndex: number, tm: TeamMember[]) => {
+    const indexStr = `event${eventIndex}`;
+    const memberIndices = tm.map(m => team.members.findIndex(x => x === m)).filter(x => x >= 0);
+    setTeam(
+      t => ({
+        ...t,
+        events: {
+          ...t.events,
+          [indexStr]: memberIndices
+        }
+      })
     );
   };
 
   const handleMemberLeaderChange = (index: number) => {
-    if (index < 0 || index >= members.length) {
+    if (index < 0 || index >= team.members.length) {
       return;
     }
-    setMembers(m => m.map((member, i) => ({ ...member, isLeader: index === i })));
+    setTeam(
+      t => ({
+        ...t,
+        members: t.members.map((member, i) => ({ ...member, isLeader: index === i }))
+      })
+    );
   }
 
   const formValuesAreValid = useMemo(() => {
-    if (!contingent || !category) {
+    if (!contingent || !team.category) {
       return false;
     }
-    if (!contingents.find(x => x.id === contingent)) {
+    if (!userContext.contingents.find(x => x.id === contingent)) {
       return false;
     }
-    if (!availableCategories.find(x => x.id === category)) {
+    if (!availableCategories.find(x => x.id === team.category)) {
       return false;
     }
     if (memberNo < 1) {
       return false;
     }
     let leaderExists = false;
-    for (const member of members) {
+    for (const member of team.members) {
       if (!member.name || !member.nric) {
         return false;
       }
@@ -194,30 +197,28 @@ export default function TeamForm() {
       return false;
     }
     return true;
-  }, [availableCategories, category, contingent, contingents, icPattern, memberNo, members]);
+  }, [availableCategories, contingent, icPattern, memberNo, team, userContext]);
   
   return (
     <form autoComplete="off">
       <Stack spacing={2}>
         <FormGroup>
           <Fieldset title='Maklumat Penyertaan' elevation={2}>
-            <TextField id='team-contingent' label='Kontinjen' select required value={contingent} onChange={(e) => setContingent(e.target.value)} margin="normal" variant="standard">
-              {contingents.map(option => (
-                <MenuItem key={option.id} value={option.id}>{option.name}</MenuItem>
-              ))}
-            </TextField>
-            <TextField id='team-category' label='Peringkat penyertaan' select disabled={!contingent} required value={category} onChange={(e) => setCategory(e.target.value)} margin="normal" variant="standard">
-              {availableCategories.map(option => (
-                <MenuItem key={option.id} value={option.id}>{option.name}</MenuItem>
-              ))}
-            </TextField>
+            <FormControl fullWidth>
+              <InputLabel id='team-category-label'>Peringkat penyertaan</InputLabel>
+              <Select id='team-category' labelId='team-category-label' value={team.category} label='Peringkat penyertaan' onChange={(e) => setTeam({ ...team, category: e.target.value })}>
+                {availableCategories.map(option => (
+                  <MenuItem key={option.id} value={option.id}>{option.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Fieldset>
         </FormGroup>
         <Divider />
         <FormGroup>
           <Fieldset title='Maklumat Ahli Pasukan' elevation={2}>
             <TextField id='team-memberno' label='Bilangan ahli pasukan' type='number' inputProps={{ min: 1 }} required value={memberNo} onChange={(e) => setMemberNo(Number(e.target.value))} margin="normal" variant="standard" />
-            {members.map((m, i) => (
+            {team.members.map((m, i) => (
               <Stack direction='row' spacing={2} alignItems='center'>
                 <Typography>{i + 1}</Typography>
                 <TextField id={`team-member-${i}-name`} label='Nama penuh' required value={m.name} onChange={(e) => handleMemberNameChange(i, e.target.value)} margin="normal" variant="standard" />
@@ -240,24 +241,24 @@ export default function TeamForm() {
               <Typography variant='h6'>Kategori Utama - Tamat</Typography>
               <FormControlLabel control={<Switch checked={event1} onChange={(_, checked) => setEvent1(checked)} />} label='Acara 1: Gerak Senaman Cekak Hanafi + Buah Jatuh Kreatif' />
               {event1
-              ? <Autocomplete multiple id="team-event1" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event1" value={team.events.event1?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(1, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event2} onChange={(_, checked) => setEvent2(checked)} />} label='Acara 2: Umum Senjata' />
               {event2
-              ? <Autocomplete multiple id="team-event2" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event2" value={team.events.event2?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(2, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event3} onChange={(_, checked) => setEvent3(checked)} />} label='Acara 3: Umum Papan Sekeping' />
               {event3
-              ? <Autocomplete multiple id="team-event3" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event3" value={team.events.event3?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(3, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <Typography variant='h6'>Kategori Utama - Belum Tamat</Typography>
               <FormControlLabel control={<Switch checked={event4} onChange={(_, checked) => setEvent4(checked)} />} label='Acara 4: 4 Serang 1 + Serangan Serentak' />
               {event4
-              ? <Autocomplete multiple id="team-event4" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event4" value={team.events.event4?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(4, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event5} onChange={(_, checked) => setEvent5(checked)} />} label='Acara 5: Buah Jatuh (6 Buah Seragam)' />
               {event5
-              ? <Autocomplete multiple id="team-event5" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event5" value={team.events.event5?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(5, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
             </Stack>
             )
@@ -272,28 +273,28 @@ export default function TeamForm() {
               <Typography variant='h6'>Kategori Terbuka - Tamat</Typography>
               <FormControlLabel control={<Switch checked={event6} onChange={(_, checked) => setEvent6(checked)} />} label='Acara 6: Menangkis Serangan Pisau' />
               {event6
-              ? <Autocomplete multiple id="team-event6" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event6" value={team.events.event6?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(6, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event7} onChange={(_, checked) => setEvent7(checked)} />} label='Acara 7: Menangkis Serangan Kaki' />
               {event7
-              ? <Autocomplete multiple id="team-event7" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event7" value={team.events.event7?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(7, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event8} onChange={(_, checked) => setEvent8(checked)} />} label='Acara 8: Menangkis Serangan Tongkat' />
               {event8
-              ? <Autocomplete multiple id="team-event8" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event8" value={team.events.event8?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(8, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event9} onChange={(_, checked) => setEvent9(checked)} />} label='Acara 9: Senaman Lading + Menangkis Serangan Menggunakan Parang Lading' />
               {event9
-              ? <Autocomplete multiple id="team-event9" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event9" value={team.events.event9?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(9, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <Typography variant='h6'>Kategori Terbuka - Belum Tamat</Typography>
               <FormControlLabel control={<Switch checked={event10} onChange={(_, checked) => setEvent10(checked)} />} label='Acara 10: Gerak Silat Sepasang' />
               {event10
-              ? <Autocomplete multiple id="team-event10" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event10" value={team.events.event10?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(10, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
               <FormControlLabel control={<Switch checked={event11} onChange={(_, checked) => setEvent11(checked)} />} label='Acara 11: Gerak Silat Bertiga' />
               {event11
-              ? <Autocomplete multiple id="team-event11" options={members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
+              ? <Autocomplete multiple id="team-event11" value={team.events.event11?.map(x => team.members[x]) ?? []} onChange={(_, v) => handleEventMemberChange(11, v)} options={team.members} getOptionLabel={option => option.name} getOptionKey={option => option.nric} renderInput={(params: TextFieldProps) => <TextField {...params} label="Peserta" />} />
               : null}
             </Stack>
             )
@@ -301,7 +302,10 @@ export default function TeamForm() {
           </Fieldset>
         </FormGroup>
         <Divider />
-        <Button type='submit' disabled={!formValuesAreValid} variant='contained'>Simpan</Button>
+        <Stack direction='row' spacing={2} alignItems='stretch'>
+          <Button disabled={!formValuesAreValid || disabled} variant='contained' onClick={() => onSave(team)}>Simpan</Button>
+          {!!team && !!onDelete && <Button disabled={disabled} variant='contained' onClick={() => onDelete()}>Padam</Button>}
+        </Stack>
       </Stack>
     </form>
   );

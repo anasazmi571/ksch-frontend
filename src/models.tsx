@@ -8,6 +8,7 @@ export type User = {
   email: string;
   password?: string;
   type: UserType;
+  contingent?: string;
 };
 
 export type SignUpDetails = Omit<User, 'id'>;
@@ -21,10 +22,17 @@ export type Contingent = {
   ms: boolean;
 };
 
+export type Team = {
+  id: string;
+  category?: string;
+  manager: string;
+};
+
 export type TeamMember = {
-  id?: string;
+  id: string;
   name: string;
   nric: string;
+  team: string;
   isLeader?: boolean;
 };
 
@@ -33,16 +41,9 @@ export type Category = {
   name: string;
 };
 
-export type TeamManager = {
-  id?: string;
-  name: string;
-  phone: string;
-  email: string;
-  nric: string;
-};
-
 export type Events = {
-  id?: string;
+  id: string;
+  team: string;
   event1?: number[];
   event2?: number[];
   event3?: number[];
@@ -56,6 +57,12 @@ export type Events = {
   event11?: number[];
 }
 
+export type Settings = {
+  id: string;
+  registrationDeadline: Date;
+  teamEditDeadline: Date;
+};
+
 export type TDocument = { id: string };
 
 export interface DataStore<T extends TDocument> {
@@ -64,4 +71,10 @@ export interface DataStore<T extends TDocument> {
   create: (details: Omit<T, 'id'>) => Promise<T | undefined>;
   update: (id: string, details: Omit<T, 'id'>) => Promise<T | undefined>;
   delete: (id: string) => Promise<boolean>;
+};
+
+export type TeamFormDetails = {
+  category: string | undefined;
+  members: TeamMember[];
+  events: Omit<Events, 'id'>;
 };
