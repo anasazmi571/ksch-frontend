@@ -23,6 +23,7 @@ export default function SiteHeader(props: AppBarProps) {
           <Divider orientation="vertical" />
           {!!userContext.user && <LinkButton to='/pengguna' label='Pengguna' />}
           {!!userContext.user && userContext.user.type === UserType.TeamManager && <LinkButton to='/pasukan' label='Pasukan' />}
+          {!!userContext.user && userContext.user.type === UserType.TeamManager && <LinkButton to='/acara' label='Acara' />}
           <LinkButton to='/tetapan' label='Tetapan' />
           <Divider orientation="vertical" />
           {!!userContext.user ? <LinkButton to='/daftar-keluar' label='Daftar Keluar' /> : <LinkButton to='/daftar-masuk' label='Daftar Masuk' />}

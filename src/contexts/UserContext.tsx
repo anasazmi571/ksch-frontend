@@ -1,5 +1,5 @@
 import { ReactNode, createContext, useCallback, useEffect, useMemo, useState } from "react";
-import { Category, Contingent, DataStore, Events, SignUpDetails, Team, TeamFormDetails, TeamMember, User } from "../models";
+import { Category, Contingent, DataStore, EventEntry, SignUpDetails, Team, TeamFormDetails, TeamMember, TournamentEvent, User } from "../models";
 import { JsonDataStore } from "../data/JsonDataStore";
 import { UserType } from "../enums";
 
@@ -9,13 +9,17 @@ type UserFunctions = {
   user: User | undefined;
   teams: Team[];
   teamMembers: TeamMember[];
-  events: Events[];
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (details: SignUpDetails) => Promise<void>;
-  createTeam: (v: Omit<Team, 'id'>) => Promise<void>;
-  updateTeam: (id: string, v: TeamFormDetails) => Promise<void>;
-  deleteTeam: (id: string) => Promise<void>;
+  events: TournamentEvent[];
+  mainEvents: TournamentEvent[];
+  openEvents: TournamentEvent[];
+  entries: EventEntry[];
+  signIn: (email: string, password: string) => Promise<boolean>;
+  signOut: () => Promise<boolean>;
+  signUp: (details: SignUpDetails) => Promise<boolean>;
+  createTeam: (v: Omit<Team, 'id'>) => Promise<Team | undefined>;
+  updateTeam: (id: string, v: TeamFormDetails) => Promise<Team | undefined>;
+  updateEntries: (newEntries: EventEntry[]) => Promise<EventEntry[]>;
+  deleteTeam: (id: string) => Promise<boolean>;
 };
 
 export const UserContext = createContext<UserFunctions>({
@@ -25,12 +29,16 @@ export const UserContext = createContext<UserFunctions>({
   teams: [],
   teamMembers: [],
   events: [],
-  signIn: () => new Promise<void>(resolve => resolve()),
-  signOut: () => new Promise<void>(resolve => resolve()),
-  signUp: () => new Promise<void>(resolve => resolve()),
-  createTeam: () => new Promise<void>(resolve => resolve()),
-  updateTeam: () => new Promise<void>(resolve => resolve()),
-  deleteTeam: () => new Promise<void>(resolve => resolve())
+  mainEvents: [],
+  openEvents: [],
+  entries: [],
+  signIn: () => new Promise<boolean>(resolve => resolve(false)),
+  signOut: () => new Promise<boolean>(resolve => resolve(false)),
+  signUp: () => new Promise<boolean>(resolve => resolve(false)),
+  createTeam: () => new Promise<Team | undefined>(resolve => resolve(undefined)),
+  updateTeam: () => new Promise<Team | undefined>(resolve => resolve(undefined)),
+  updateEntries: () => new Promise<EventEntry[]>(resolve => resolve([])),
+  deleteTeam: () => new Promise<boolean>(resolve => resolve(false))
 });
 
 export function UserProvider({children}: {children: ReactNode}) {
@@ -111,17 +119,146 @@ export function UserProvider({children}: {children: ReactNode}) {
       nric: '001122-33-4321',
       email: 'tm@mail.com',
       password: 'tmtm1234',
-      type: UserType.TeamManager
+      type: UserType.TeamManager,
+      contingent: 'cawselangor'
     }
   ]), []);
-  const teamDb: DataStore<Team> = useMemo(() => new JsonDataStore<Team>([]), []);
-  const teamMemberDb: DataStore<TeamMember> = useMemo(() => new JsonDataStore<TeamMember>([]), []);
-  const eventDb: DataStore<Events> = useMemo(() => new JsonDataStore<Events>([]), []);
+  const eventDb: DataStore<TournamentEvent> = useMemo(() => new JsonDataStore<TournamentEvent>([
+    {
+      id: 'event1',
+      name: 'Gerak Senaman Cekak Hanafi + Buah Jatuh Kreatif',
+      participants: 6,
+      graduatesOnly: true,
+      timeLimit: 180
+    },
+    {
+      id: 'event2',
+      name: 'Umum Senjata',
+      participants: 6,
+      graduatesOnly: true,
+      timeLimit: 30
+    },
+    {
+      id: 'event3',
+      name: 'Umum Papan Sekeping',
+      participants: 6,
+      graduatesOnly: true,
+      timeLimit: 30
+    },
+    {
+      id: 'event4',
+      name: '4 Lawan 1',
+      participants: 5,
+      timeLimit: 60
+    },
+    {
+      id: 'event5',
+      name: '6 Buah Jatuh Seragam',
+      participants: 6,
+      timeLimit: 120
+    },
+    {
+      id: 'event6',
+      name: 'Menangkis Serangan Pisau',
+      participants: 2,
+      open: true,
+      graduatesOnly: true,
+      timeLimit: 60
+    },
+    {
+      id: 'event7',
+      name: 'Menangkis Serangan Kaki',
+      participants: 2,
+      open: true,
+      graduatesOnly: true,
+      timeLimit: 60
+    },
+    {
+      id: 'event8',
+      name: 'Menangkis Serangan Tongkat',
+      participants: 2,
+      open: true,
+      graduatesOnly: true,
+      timeLimit: 60
+    },
+    {
+      id: 'event9',
+      name: 'Senaman Lading & Menangkis Serangan Menggunakan Lading',
+      participants: 2,
+      open: true,
+      graduatesOnly: true,
+      timeLimit: 120
+    },
+    {
+      id: 'event10',
+      name: 'Gerak Silat Sepasang',
+      participants: 2,
+      open: true,
+      timeLimit: 120
+    },
+    {
+      id: 'event11',
+      name: 'Gerak Silat Bertiga',
+      participants: 3,
+      open: true,
+      timeLimit: 120
+    }
+  ]), []);
+  const teamDb: DataStore<Team> = useMemo(() => new JsonDataStore<Team>([
+    {
+      id: 'team0',
+      category: 'branch-male',
+      manager: '1'
+    }
+  ]), []);
+  const teamMemberDb: DataStore<TeamMember> = useMemo(() => new JsonDataStore<TeamMember>([
+    {
+      id: 'member0',
+      name: 'Test Member 1',
+      nric: '001122-33-9001',
+      team: 'team0'
+    },
+    {
+      id: 'member1',
+      name: 'Test Member 2',
+      nric: '001122-33-9002',
+      team: 'team0'
+    },
+    {
+      id: 'member2',
+      name: 'Test Member 3',
+      nric: '001122-33-9003',
+      team: 'team0'
+    },
+    {
+      id: 'member3',
+      name: 'Test Member 4',
+      nric: '001122-33-9004',
+      team: 'team0'
+    },
+    {
+      id: 'member4',
+      name: 'Test Member 5',
+      nric: '001122-33-9005',
+      team: 'team0'
+    },
+    {
+      id: 'member5',
+      name: 'Test Member 6',
+      nric: '001122-33-9006',
+      team: 'team0'
+    }
+  ]), []);
+  const entryDb: DataStore<EventEntry> = useMemo(() => new JsonDataStore<EventEntry>(), []);
   const [user, setUser] = useState<User>();
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [events, setEvents] = useState<Events[]>([]);
+  const [events, setEvents] = useState<TournamentEvent[]>([]);
+  const [entries, setEntries] = useState<EventEntry[]>([]);
   const [contingents, setContingents] = useState<Contingent[]>([]);
+
+  const mainEvents = useMemo(() => events.filter(x => !x.open), [events]);
+  const openEvents = useMemo(() => events.filter(x => !!x.open), [events]);
   
   const signIn = useCallback(async (email: string, password: string) => {
     const users = await userDb.getAll(x => x.email === email && x.password === password);
@@ -129,10 +266,12 @@ export function UserProvider({children}: {children: ReactNode}) {
       throw new Error('Invalid user credentials.');
     }
     setUser(users[0]);
+    return true;
   }, [userDb]);
 
   const signOut = useCallback(async () => {
     setUser(undefined);
+    return true;
   }, []);
   const signUp = useCallback(async (details: SignUpDetails) => {
     const newUser = await userDb.create(details);
@@ -140,6 +279,7 @@ export function UserProvider({children}: {children: ReactNode}) {
       throw new Error('Invalid sign-up details.');
     }
     setUser(newUser);
+    return true;
   }, [userDb]);
 
   const createTeam = useCallback(async (v: Omit<Team, 'id'>) => {
@@ -154,6 +294,7 @@ export function UserProvider({children}: {children: ReactNode}) {
     } else {
       setTeams([]);
     }
+    return newTeam;
   }, [teamDb, user]);
   
   const updateTeam = useCallback(async (id: string, v: TeamFormDetails) => {
@@ -184,16 +325,25 @@ export function UserProvider({children}: {children: ReactNode}) {
     }
     const newMembers = await Promise.all(memberTransactions);
     setTeamMembers(newMembers.filter(x => !!x) as TeamMember[]);
-    const oldEvent = (await eventDb.getAll(x => x.team === newTeam.id)).find(x => !!x);
-    if (!!oldEvent) {
-      await eventDb.update(oldEvent.id, v.events);
-    } else {
-      await eventDb.create(v.events);
+    return newTeams.find(x => x.id === id);
+  }, [teamDb, teamMemberDb, user]);
+
+  const updateEntries = useCallback(async (newEntries: EventEntry[]) => {
+    const userId = user?.id;
+    if (!userId) {
+      throw new Error('User does not exist.');
     }
-    const newTeamIds = newTeams.map(t => t.id);
-    const newEvents = await eventDb.getAll(x => newTeamIds.includes(x.team));
-    setEvents(newEvents);
-  }, [teamDb, teamMemberDb, eventDb, user]);
+    const oldEntries = entries.map(x => x.id);
+    const transactions = [
+      ...newEntries.map(x => !oldEntries.includes(x.id) ? entryDb.create(x) : entryDb.update(x.id, x)),
+      ...oldEntries.filter(x => newEntries.map(y => y.id).includes(x)).map(x => entryDb.delete(x))
+    ];
+    await Promise.all(transactions);
+    const newTeamIds = teams.map(t => t.id);
+    const newEvents = await entryDb.getAll(x => newTeamIds.includes(x.team));
+    setEntries(newEvents);
+    return newEvents;
+  }, [entryDb, teams, user, entries]);
 
   const deleteTeam = useCallback(async (id: string) => {
     const userId = user?.id;
@@ -201,13 +351,23 @@ export function UserProvider({children}: {children: ReactNode}) {
       throw new Error('User does not exist.');
     }
     const transactions: Promise<boolean>[] = [];
-    const events = await eventDb.getAll(x => x.team === id);
-    transactions.push(...events.map(x => eventDb.delete(x.id)));
+    const eventsToDelete = await entryDb.getAll(x => x.team === id);
+    transactions.push(...eventsToDelete.map(x => entryDb.delete(x.id)));
     const members = await teamMemberDb.getAll(x => x.team === id);
     transactions.push(...members.map(x => teamMemberDb.delete(x.id)));
     transactions.push(teamDb.delete(id));
     await Promise.all(transactions);
-  }, [teamDb, teamMemberDb, eventDb, user]);
+    return true;
+  }, [teamDb, teamMemberDb, entryDb, user]);
+
+  useEffect(() => {
+    eventDb.getAll().then(e => {
+      setEvents(e);
+    }).catch(e => {
+      console.error(e);
+      setEvents([]);
+    })
+  }, [eventDb]);
 
   useEffect(() => {
     if (!!user) {
@@ -232,23 +392,43 @@ export function UserProvider({children}: {children: ReactNode}) {
 
   useEffect(() => {
     if (teams.length < 1) {
-      setEvents([]);
+      setEntries([]);
     } else {
       const eventIds = teams.map(t => t.id);
-      eventDb.getAll(x => eventIds.includes(x.team)).then(result => {
-        setEvents(result);
+      entryDb.getAll(x => eventIds.includes(x.team)).then(result => {
+        setEntries(result);
       });
     }
-  }, [teams, eventDb]);
+  }, [teams, entryDb]);
 
   useEffect(() => {
     contingentDb.getAll().then(result => {
       setContingents(result);
     });
-  }, [contingentDb]);
+    eventDb.getAll().then(result => {
+      setEvents(result);
+    });
+  }, [contingentDb, eventDb]);
 
   return (
-    <UserContext.Provider value={{ contingents, categories, user, teams, teamMembers, events, signIn, signOut, signUp, createTeam, updateTeam, deleteTeam }}>
+    <UserContext.Provider value={{
+      contingents,
+      categories,
+      user,
+      teams,
+      teamMembers,
+      events,
+      mainEvents,
+      openEvents,
+      entries,
+      signIn,
+      signOut,
+      signUp,
+      createTeam,
+      updateTeam,
+      updateEntries,
+      deleteTeam
+    }}>
       {children}
     </UserContext.Provider>
   );

@@ -41,6 +41,22 @@ export type Category = {
   name: string;
 };
 
+export type TournamentEvent = {
+  id: string;
+  name: string;
+  open?: boolean;
+  graduatesOnly?: boolean;
+  participants: number;
+  timeLimit: number;
+};
+
+export type EventEntry = {
+  id: string;
+  event: string;
+  team: string;
+  members: string[];
+};
+
 export type Events = {
   id: string;
   team: string;
@@ -76,5 +92,4 @@ export interface DataStore<T extends TDocument> {
 export type TeamFormDetails = {
   category: string | undefined;
   members: TeamMember[];
-  events: Omit<Events, 'id'>;
 };

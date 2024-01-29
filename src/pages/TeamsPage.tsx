@@ -85,8 +85,8 @@ export default function TeamsPage() {
           {userContext.teams.length > 0 && (
             <Box sx={{ width: '100%' }}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={tab} onChange={(_, v) => setTab(v)} aria-label="basic tabs example">
-                  {userContext.teams.map((_, i) => <Tab key={`teamtab${i}`} label={`Team #${i + 1}`} value={`team${i}`} />)}
+                <Tabs value={tab} onChange={(_, v) => setTab(v)}>
+                  {userContext.teams.map((_, i) => <Tab key={`teamtab${i}`} label={`Pasukan #${i + 1}`} value={`team${i}`} />)}
                 </Tabs>
               </Box>
               {!!userContext.user.contingent && userContext.teams.map((t, i) => (
@@ -100,8 +100,7 @@ export default function TeamsPage() {
                   onDelete={() => handleDeleteTeam(t.id)}
                   defaultValue={{
                     category: t.category,
-                    members: userContext.teamMembers.filter(m => m.team === t.id),
-                    events: userContext.events.find(e => e.team === t.id) ?? { team: t.id }
+                    members: userContext.teamMembers.filter(m => m.team === t.id)
                   }}
                   />
                 </CustomTabPanel>
