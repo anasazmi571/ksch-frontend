@@ -21,4 +21,4 @@ jobs:
       - name: Run deploy script
         run: |
           git config user.name "Anas bin Azmi" && git config user.email "anasazmi571@gmail.com"
-          yarn gh-pages-deploy
+          yarn deploy
