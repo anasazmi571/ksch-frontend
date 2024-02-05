@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/ksch-frontend/static/css/main.f6fef0ef.css",
-    "main.js": "/ksch-frontend/static/js/main.92e9f77d.js",
+    "main.js": "/ksch-frontend/static/js/main.a72b6216.js",
     "static/js/787.d5456324.chunk.js": "/ksch-frontend/static/js/787.d5456324.chunk.js",
     "index.html": "/ksch-frontend/index.html",
     "main.f6fef0ef.css.map": "/ksch-frontend/static/css/main.f6fef0ef.css.map",
-    "main.92e9f77d.js.map": "/ksch-frontend/static/js/main.92e9f77d.js.map",
+    "main.a72b6216.js.map": "/ksch-frontend/static/js/main.a72b6216.js.map",
     "787.d5456324.chunk.js.map": "/ksch-frontend/static/js/787.d5456324.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f6fef0ef.css",
-    "static/js/main.92e9f77d.js"
+    "static/js/main.a72b6216.js"
   ]
 }
