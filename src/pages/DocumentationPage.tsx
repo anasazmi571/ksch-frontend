@@ -16,7 +16,7 @@ export default function DocumentationPage() {
     <Stack spacing={2}>
       <Typography variant='h2'>Dokumentasi</Typography>
       <Typography variant='h4'>Slaid Taklimat</Typography>
-      <LinkButton to='/docs/Taklimat-Kejohanan-Silat-Cekak-Hanafi-Nasional-2024.pptx' label='Taklimat Kejohanan Silat Cekak Hanafi Nasional 2024' target='_blank' download />
+      <LinkButton to='/docs/Taklimat-Kejohanan-Silat-Cekak-Hanafi-Nasional-2024.pptx' label='Muat turun slaid taklimat' target='_blank' download />
       <Typography variant='h4'>Video Contoh</Typography>
       <Tabs variant="scrollable" value={open} onChange={handleChange} sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tab value='1' label="Acara 1" />
