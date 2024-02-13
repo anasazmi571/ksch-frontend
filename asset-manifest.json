@@ -1,15 +1,17 @@
 {
   "files": {
-    "main.css": "/ksch-frontend/static/css/main.f6fef0ef.css",
-    "main.js": "/ksch-frontend/static/js/main.a72b6216.js",
+    "main.css": "/ksch-frontend/static/css/main.3663dbba.css",
+    "main.js": "/ksch-frontend/static/js/main.e7b2954e.js",
+    "reactPlayerPreview.js": "/ksch-frontend/static/js/reactPlayerPreview.4f1edb60.chunk.js",
     "static/js/787.d5456324.chunk.js": "/ksch-frontend/static/js/787.d5456324.chunk.js",
     "index.html": "/ksch-frontend/index.html",
-    "main.f6fef0ef.css.map": "/ksch-frontend/static/css/main.f6fef0ef.css.map",
-    "main.a72b6216.js.map": "/ksch-frontend/static/js/main.a72b6216.js.map",
+    "main.3663dbba.css.map": "/ksch-frontend/static/css/main.3663dbba.css.map",
+    "main.e7b2954e.js.map": "/ksch-frontend/static/js/main.e7b2954e.js.map",
+    "reactPlayerPreview.4f1edb60.chunk.js.map": "/ksch-frontend/static/js/reactPlayerPreview.4f1edb60.chunk.js.map",
     "787.d5456324.chunk.js.map": "/ksch-frontend/static/js/787.d5456324.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f6fef0ef.css",
-    "static/js/main.a72b6216.js"
+    "static/css/main.3663dbba.css",
+    "static/js/main.e7b2954e.js"
   ]
 }
