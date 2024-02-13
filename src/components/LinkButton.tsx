@@ -1,17 +1,11 @@
 import Typography from "@mui/material/Typography";
-import { Link } from "react-router-dom";
+import { Link, LinkProps } from "react-router-dom";
 
-export default function LinkButton({
-  to,
-  label
-}: {
-  to: string,
-  label: string
-}) {
+export default function LinkButton(props: { label: string } & LinkProps) {
   return (
-    <Link to={to} style={{ textDecoration: 'none' }}>
+    <Link style={{ textDecoration: 'none' }} {...props}>
       <Typography variant='button' color='primary' style={{ textDecoration: 'none' }}>
-        {label}
+        {props.label}
       </Typography>
     </Link>
   );

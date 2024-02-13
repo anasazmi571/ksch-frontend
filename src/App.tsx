@@ -9,6 +9,8 @@ import SettingsPage from './pages/SettingsPage';
 import SignOutPage from './pages/SignOutPage';
 import TeamsPage from './pages/TeamsPage';
 import EventsPage from './pages/EventsPage';
+import NotFoundPage from './pages/NotFoundPage';
+import DocumentationPage from './pages/DocumentationPage';
 
 function App() {
   return (
@@ -22,7 +24,9 @@ function App() {
           <Route path='/daftar-masuk' element={<SignInPage />} />
           <Route path='/daftar' element={<SignUpPage />} />
           <Route path='/tetapan' element={<SettingsPage />} />
+          <Route path='/dokumentasi' element={<DocumentationPage />} />
           <Route path='/daftar-keluar' element={<SignOutPage />} />
+          {/* <Route path='*' element={<NotFoundPage />} /> */}
         </Route>
       </Routes>
     </Paper>
