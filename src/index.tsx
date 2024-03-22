@@ -37,7 +37,7 @@ root.render(
       <CssBaseline />
       <UserProvider>
         <SettingsProvider>
-          <BrowserRouter basename='ksch-frontend'>
+          <BrowserRouter>
             <SiteHeader sx={{ height: '200px' }} />
             <App />
           </BrowserRouter>
